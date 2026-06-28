@@ -1,0 +1,29 @@
+name: Build & Release
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build app
+        run: bash build.sh dist
+
+      - name: Package
+        run: ditto -c -k --sequesterRsrc --keepParent dist/DiskBar.app DiskBar.zip
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.${{ github.run_number }}
+          name: DiskBar v1.0.${{ github.run_number }}
+          files: DiskBar.zip
+          generate_release_notes: true
