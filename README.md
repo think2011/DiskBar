@@ -7,6 +7,13 @@
 **在 macOS 状态栏一眼看到每块硬盘的使用情况和实时读写速度**
 **Every drive's usage & live read/write speed, right in your menu bar**
 
+<p>
+  <a href="https://github.com/think2011/DiskBar/releases/latest"><img src="https://img.shields.io/github/v/release/think2011/DiskBar?color=3B82C4&label=release" alt="Release"></a>
+  <a href="https://github.com/think2011/DiskBar/actions/workflows/release.yml"><img src="https://github.com/think2011/DiskBar/actions/workflows/release.yml/badge.svg" alt="Build"></a>
+  <img src="https://img.shields.io/badge/macOS-Apple%20Silicon-2C3E50" alt="Platform">
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/think2011/DiskBar?color=3B82C4" alt="License"></a>
+</p>
+
 <img src="assets/preview.png" width="380" alt="DiskBar preview">
 
 </div>
@@ -41,16 +48,6 @@ Grab the latest `DiskBar.zip` from [**Releases**](https://github.com/think2011/D
 > First launch may warn about an unidentified developer — go to System Settings → Privacy & Security → "Open Anyway".
 >
 > 仅支持 Apple Silicon。Apple Silicon only.
-
-## 构建 · Build
-
-```bash
-bash build.sh                 # 编译并输出 DiskBar.app 到桌面 / outputs to Desktop
-bash build.sh /Applications   # 或直接装到「应用程序」/ or install into Applications
-```
-
-只需 Xcode Command Line Tools，无需完整 Xcode（用 `swiftc` 手搓 `.app`）。
-Only needs Xcode Command Line Tools — no full Xcode (the app is assembled by `swiftc`).
 
 ## License
 
