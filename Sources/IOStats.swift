@@ -7,8 +7,10 @@ struct IOSpeed: Equatable {
     var write: Double
 }
 
-/// 采样物理盘的累计 I/O，按时间差算出每个卷的实时读写速度。
-/// Apple Silicon 上 APFS 卷位于合成虚拟盘，通过递归遍历物理盘的 IORegistry 子树映射回物理盘。
+/// 采样物理盘累计 I/O，按相邻两次采样的差值算出瞬时读写速度（实时、灵敏）。
+/// 注意：对直接拷贝文件等原生连续 I/O 平滑准确；对 docker/OrbStack 等缓冲写入，物理盘是
+/// 突发式 flush（攒一批猛刷），瞬时速度会随之起伏 —— 这是物理写入与网络速度的本质差异，非 bug。
+/// Apple Silicon 上 APFS 卷在合成虚拟盘，通过递归遍历物理盘 IORegistry 子树映射回物理盘。
 final class IOSampler {
     private var lastByDisk: [String: (read: Int64, write: Int64)] = [:]
     private var lastTime: Date?
@@ -18,7 +20,6 @@ final class IOSampler {
         lastTime = nil
     }
 
-    /// 采样并返回 [volume.id: IOSpeed]。首次调用只建立基线，返回空。
     func sample(volumes: [VolumeInfo]) -> [String: IOSpeed] {
         let disks = Self.physicalDisks()
         let now = Date()
@@ -44,7 +45,9 @@ final class IOSampler {
             }
         }
 
-        lastByDisk = disks.mapValues { ($0.read, $0.write) }
+        var base: [String: (read: Int64, write: Int64)] = [:]
+        for (whole, info) in disks { base[whole] = (info.read, info.write) }
+        lastByDisk = base
         lastTime = now
         return speeds
     }

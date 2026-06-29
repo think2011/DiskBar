@@ -67,10 +67,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
         popover.contentViewController?.view.window?.makeKey()
         monitor.resetSpeeds()
         monitor.refreshSpeeds()
-        let t = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+        let t = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
             guard let self else { return }
             self.monitor.refresh()
-            self.monitor.refreshSpeeds()   // 只刷新详情数据，不触碰菜单栏图标
+            self.monitor.refreshSpeeds()   // 0.5s 实时刷新；只刷新详情数据，不触碰菜单栏图标
         }
         RunLoop.main.add(t, forMode: .common)
         speedTimer = t
