@@ -1,12 +1,17 @@
 import AppKit
 import SwiftUI
+import Combine
 
 final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     private var statusItem: NSStatusItem!
     private let popover = NSPopover()
     private let monitor = VolumeMonitor()
+    private let settings = AppSettings.shared
+    private var widgetController: DesktopWidgetController!
+    private var settingsCancellable: AnyCancellable?
     private var capacityTimer: Timer?   // 3s：容量 + 菜单栏图标（仅详情关闭时刷新图标）
-    private var speedTimer: Timer?      // 1s：读写速度（仅详情打开时运行，不触碰菜单栏图标）
+    private var speedTimer: Timer?      // 自适应：详情 0.5s，桌面组件 1s；不触碰菜单栏图标
+    private var activeSpeedInterval: TimeInterval?
     private var lastClosed: Date?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -21,6 +26,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
         popover.behavior = .transient
         popover.animates = false   // 配合手动定位，关闭缩放动画以免浮窗位置闪跳
         popover.delegate = self
+        widgetController = DesktopWidgetController(
+            monitor: monitor,
+            onSelect: { [weak self] vol in self?.openInFinder(vol) }
+        )
+        widgetController.onVisibilityChange = { [weak self] in
+            self?.updateSpeedTimer()
+        }
         let detail = DetailView(
             monitor: monitor,
             onSelect: { [weak self] vol in self?.openInFinder(vol) },
@@ -30,6 +42,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
 
         monitor.refresh()
         updateStatusImage()
+        if settings.desktopWidgetEnabled { monitor.resetSpeeds() }
+        widgetController.setVisible(settings.desktopWidgetEnabled)
+        settingsCancellable = settings.$desktopWidgetEnabled
+            .dropFirst()
+            .removeDuplicates()
+            .sink { [weak self] enabled in
+                guard let self else { return }
+                if enabled { self.monitor.resetSpeeds() }
+                self.widgetController.setVisible(enabled)
+            }
 
         let t = Timer.scheduledTimer(withTimeInterval: 3.0, repeats: true) { [weak self] _ in
             guard let self else { return }
@@ -66,21 +88,40 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
         // 成为 key window，.transient 才能在点击外部（含桌面）时自动关闭。
         popover.contentViewController?.view.window?.makeKey()
         monitor.resetSpeeds()
+        updateSpeedTimer()
+    }
+
+    func popoverDidClose(_ notification: Notification) {
+        lastClosed = Date()
+        updateSpeedTimer()
+        updateStatusImage()   // 关闭后补一次菜单栏刷新
+    }
+
+    private func updateSpeedTimer() {
+        let desired = desiredSpeedInterval()
+        if desired == activeSpeedInterval, speedTimer != nil { return }
+
+        speedTimer?.invalidate()
+        speedTimer = nil
+        activeSpeedInterval = desired
+
+        guard let interval = desired else {
+            monitor.resetSpeeds()
+            return
+        }
+
         monitor.refreshSpeeds()
-        let t = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
-            guard let self else { return }
-            self.monitor.refresh()
-            self.monitor.refreshSpeeds()   // 0.5s 实时刷新；只刷新详情数据，不触碰菜单栏图标
+        let t = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
+            self?.monitor.refreshSpeeds()
         }
         RunLoop.main.add(t, forMode: .common)
         speedTimer = t
     }
 
-    func popoverDidClose(_ notification: Notification) {
-        lastClosed = Date()
-        speedTimer?.invalidate()
-        speedTimer = nil
-        updateStatusImage()   // 关闭后补一次菜单栏刷新
+    private func desiredSpeedInterval() -> TimeInterval? {
+        if popover.isShown { return 0.5 }
+        if widgetController?.isShown == true { return 1.0 }
+        return nil
     }
 
     /// 系统对状态栏 popover 的自动定位在本机有垂直偏差，手动把浮窗放到图标正下方。

@@ -6,25 +6,42 @@ import AppKit
 struct PreviewMain {
     @MainActor static func main() {
         let monitor = VolumeMonitor()
+        if let rawOrder = ProcessInfo.processInfo.environment["DISKBAR_PREVIEW_VOLUME_ORDER"] {
+            let order = rawOrder.split(separator: "|").map(String.init)
+            UserDefaults.standard.set(order, forKey: AppSettings.volumeOrderKey)
+        } else {
+            UserDefaults.standard.removeObject(forKey: AppSettings.volumeOrderKey)
+        }
         monitor.refresh()
         monitor.resetSpeeds()
         monitor.refreshSpeeds()
         Thread.sleep(forTimeInterval: 1.0)
         monitor.refreshSpeeds()
         FileHandle.standardError.write("volumes=\(monitor.volumes.count) speeds=\(monitor.speeds.count)\n".data(using: .utf8)!)
+        for vol in monitor.volumes {
+            FileHandle.standardError.write("volume=\(vol.name)\tid=\(vol.id)\n".data(using: .utf8)!)
+        }
 
         let composite = renderMenuBarPreview(volumes: monitor.volumes)
         savePNG(composite, to: "/tmp/diskbar_menubar.png")
 
         Localization.shared.language = .zh
         renderDetail(monitor, to: "/tmp/diskbar_detail.png")
+        renderWidget(monitor, to: "/tmp/diskbar_widget.png")
         Localization.shared.language = .en
         renderDetail(monitor, to: "/tmp/diskbar_detail_en.png")
+        renderWidget(monitor, to: "/tmp/diskbar_widget_en.png")
         print("preview done")
     }
 
     @MainActor static func renderDetail(_ monitor: VolumeMonitor, to path: String) {
-        let renderer = ImageRenderer(content: DetailView(monitor: monitor))
+        let renderer = ImageRenderer(content: DetailView(monitor: monitor, allowsReordering: false))
+        renderer.scale = 2
+        if let img = renderer.nsImage { savePNG(img, to: path) }
+    }
+
+    @MainActor static func renderWidget(_ monitor: VolumeMonitor, to path: String) {
+        let renderer = ImageRenderer(content: DesktopWidgetView(monitor: monitor, allowsReordering: false))
         renderer.scale = 2
         if let img = renderer.nsImage { savePNG(img, to: path) }
     }
