@@ -7,6 +7,18 @@ struct IOSpeed: Equatable {
     var write: Double
 }
 
+let speedKilobyte = 1000.0
+let speedMegabyte = speedKilobyte * 1000.0
+let speedGigabyte = speedMegabyte * 1000.0
+
+func roundedSpeedForDisplay(_ bytesPerSec: Double) -> Double {
+    let b = max(0, bytesPerSec)
+    if b >= speedGigabyte { return (b / 100_000_000).rounded() * 100_000_000 }
+    if b >= speedMegabyte { return (b / 100_000).rounded() * 100_000 }
+    if b >= speedKilobyte { return (b / 1000).rounded() * 1000 }
+    return b.rounded()
+}
+
 /// 采样物理盘累计 I/O，按相邻两次采样的差值算出瞬时读写速度（实时、灵敏）。
 /// 注意：对直接拷贝文件等原生连续 I/O 平滑准确；对 docker/OrbStack 等缓冲写入，物理盘是
 /// 突发式 flush（攒一批猛刷），瞬时速度会随之起伏 —— 这是物理写入与网络速度的本质差异，非 bug。
@@ -118,9 +130,8 @@ final class IOSampler {
 /// 格式化速度：0 B/s、4 KB/s、1.4 MB/s（1000 进制）。
 func formatSpeed(_ bytesPerSec: Double) -> String {
     let b = max(0, bytesPerSec)
-    let kb = 1000.0, mb = 1000.0 * 1000, gb = 1000.0 * 1000 * 1000
-    if b >= gb { return String(format: "%.1f GB/s", b / gb) }
-    if b >= mb { return String(format: "%.1f MB/s", b / mb) }
-    if b >= kb { return String(format: "%.0f KB/s", b / kb) }
+    if b >= speedGigabyte { return String(format: "%.1f GB/s", b / speedGigabyte) }
+    if b >= speedMegabyte { return String(format: "%.1f MB/s", b / speedMegabyte) }
+    if b >= speedKilobyte { return String(format: "%.0f KB/s", b / speedKilobyte) }
     return "\(Int(b)) B/s"
 }

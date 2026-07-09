@@ -26,17 +26,31 @@ I use a Mac mini as a NAS with several external drives, and I just wanted to gla
 
 ## 功能 · Features
 
-- 📊 状态栏迷你进度条显示每块盘占用（最多 4 块，内置盘固定第一）
-  · Mini usage bars per drive in the menu bar (up to 4, internal disk first)
-- ⚡ 实时读写速度，展开详情时每秒刷新（关闭即停，不占资源）
-  · Live read/write speed, refreshed every second only while the panel is open
-- 🗂 点击硬盘在访达中打开（内置盘 → 下载文件夹，外接盘 → 挂载点）
-  · Click a drive to reveal it in Finder
+- 📊 在状态栏直接看每块盘还剩多少，最多显示 4 块盘
+  · See free space for up to 4 drives directly from the menu bar
+- ⚡ 显示实时读写速度，拷贝、备份、下载时不用猜
+  · Live read/write speed for copies, backups, downloads, and other disk work
+- 🖥️ 可选桌面小组件，想常看时就放在角落
+  · Optional desktop widget for when you want the numbers always visible
+- ↕️ 硬盘顺序可以自己排，桌面小组件也会跟着同步
+  · Reorder drives once, and the desktop widget uses the same order
+- 🗂 点击硬盘直接在访达中打开
+  · Click a drive to open it in Finder
 - 🌗 单色图标自适应深色 / 浅色菜单栏
   · Monochrome icon adapts to light / dark menu bar
 - 🌐 中英文切换，首次跟随系统语言
   · Chinese / English, follows system language on first launch
 - 🚀 开机启动 · Launch at login
+
+## 轻量够用 · Small and practical
+
+DiskBar 适合一直开着。它不是一个大面板，也不想把桌面变复杂；只是把我经常看的几件事放近一点：哪块盘快满了，现在有没有读写。
+
+DiskBar is meant to be left running. It is not a dashboard, and it does not try to take over the desktop. It just keeps the disk numbers I check most often close by: what is getting full, and whether anything is reading or writing.
+
+平时看状态栏就够了；需要多一点信息时点开详情；如果想常驻，就把桌面小组件放在顺手的位置。
+
+Most of the time the menu bar is enough. Open the panel when you want more detail, or keep the small widget on the desktop when you want it visible all the time.
 
 ## 下载 · Download
 
